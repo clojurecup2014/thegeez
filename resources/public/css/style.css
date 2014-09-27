@@ -1,0 +1,97 @@
+#table {
+    width: 800px;
+    height: 500px;
+    border: 4px solid rgb(15, 61, 15);
+    background: green;
+}
+.stone {
+    width: 40px;
+    height: 80px;
+    border: 2px solid rgb(143, 143, 127);
+    background: rgb(240, 238, 223);
+    position: absolute
+}
+
+.stone.horizontal {
+    width: 80px;
+    height: 40px;
+}
+.stone:hover {
+    cursor: pointer;
+}
+
+.stone.dragging {
+    border: 2px solid red;
+    cursor: move;
+}
+
+.vertical .face {
+    width: 40px;
+    height: 39px;
+}
+
+.horizontal .face {
+    width: 39px;
+    height: 40px;
+}
+.vertical .face.up {
+    border-bottom: 1px solid rgb(49, 49, 46);
+}
+
+.vertical .face.down {
+    border-top: 1px solid rgb(49, 49, 46);
+}
+
+.horizontal .face.up {
+    float: left;
+    border-right: 1px solid rgb(49, 49, 46);
+}
+
+.horizontal .face.down {
+    float: right;
+    border-left: 1px solid rgb(49, 49, 46);
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    position: absolute;
+    background: black;
+}
+.dot00 {
+    top: 6px;
+    left: 6px;
+}
+.dot01 {
+    top: 6px;
+    left: 16px;
+}
+.dot02 {
+    top: 6px;
+    left: 26px;
+}
+
+.dot10 {
+    top: 16px;
+    left: 6px;
+}
+.dot11 {
+    top: 16px;
+    left: 16px;
+}
+.dot12 {
+    top: 16px;
+    left: 26px;
+}
+.dot20 {
+    top: 26px;
+    left: 6px;
+}
+.dot21 {
+    top: 26px;
+    left: 16px;
+}
+.dot22 {
+    top: 26px;
+    left: 26px;
+}

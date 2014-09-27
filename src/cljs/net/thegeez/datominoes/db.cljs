@@ -15,4 +15,5 @@
                              :stone/up up
                              :stone/down down
                              :ui/top 12
-                             :ui/left 12})))))
+                             :ui/left 12
+                             :ui/vertical true})))))

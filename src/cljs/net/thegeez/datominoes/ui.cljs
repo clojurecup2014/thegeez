@@ -4,20 +4,26 @@
             [goog.events :as gevents]
             [net.thegeez.datominoes.db :as db]
             [net.thegeez.datominoes.react :as r :include-macros true]
-            [sablono.core :as s]))
+            [sablono.core :as s])
+  (:require-macros [cljs.core.async.macros :refer [go-loop]]))
+
+(def dots (for [i (range 3)
+                j (range 3)]
+            [:div.dot {:class (str "dot" i j)}]))
 
 (r/defc stone [db event-bus se]
-  [:div {:id (str "stone-" se)
-         :style {:width 20
-                 :height 40
-                 :border (if (:ui/dragging se)
-                           "2px solid red"
-                           "2px solid rgb(143, 143, 127)")
-                 :background "rgb(240, 238, 223)"
-                 :position "absolute"
-                 :top (:ui/top se)
-                 :left (:ui/left se)}}
-   (str se)]
+  [:.stone {:id (str "stone-" (:db/id se))
+            :style {:top (:ui/top se)
+                    :left (:ui/left se)}
+            :class (str
+                    (if (:ui/vertical se)
+                      "vertical "
+                      "horizontal ")
+                    (when (:ui/dragging se)
+                      "dragging"))}
+   (into [:.face.up]
+         dots)
+   [:.face.down (str (:stone/down se))]]
   :did-mount (fn [node [db event-bus se]]
                (println "Mounted node" se)
                (gevents/listen node
@@ -35,8 +41,12 @@
                                                         :ui/dragging true
                                                         #_#_:ui/top (+ (:ui/top se) y)
                                                         #_#_:ui/left (+ (:ui/left se) x)
-                                                        :ui/offsetTop (- y (:ui/top se))
-                                                        :ui/offsetLeft (- x (:ui/left se))}])))
+                                                        :ui/offsetTop 
+                                                        (+ (:ui/top se) 20)
+                                                        #_(- y (:ui/top se))
+                                                        :ui/offsetLeft 
+                                                        #_(- x (:ui/left se))
+                                                        (+ (:ui/left se) 20)}])))
                                                 (.-clientX e)
                                                 (.-clientY e)]])))))
 
@@ -62,8 +72,11 @@
                                                                               :where [[?e :ui/dragging true]]}
                                                                             db)))]
                                          [{:db/id (:db/id se)
-                                           :ui/top (- y (:ui/offsetTop se))
-                                           :ui/left (- x (:ui/offsetLeft se))}]))
+                                           :ui/vertical (if (> x 200)
+                                                          false
+                                                          true)
+                                           :ui/top (- y 20 #_(:ui/offsetTop se))
+                                           :ui/left (- x 20 #_(:ui/offsetLeft se))}]))
                                      (.-clientX e)
                                      (.-clientY e)]])))
     (gevents/listen node
@@ -82,10 +95,7 @@
                                            :ui/dragging false]]))]])))))
 
 (r/defc table [db event-bus]
-  [:#table {:style {:width 600
-                    :height 400
-                    :border "4px solid rgb(15, 61, 15)"
-                    :background "green"}}
+  [:#table 
    (stones db event-bus)])
 
 (r/defc msg [db event-bus]
