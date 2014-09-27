@@ -25,6 +25,11 @@
     cursor: move;
 }
 
+.faces {
+    width: 40px;
+    height: 80px;
+}
+
 .vertical .face {
     width: 40px;
     height: 39px;
@@ -58,40 +63,151 @@
     position: absolute;
     background: black;
 }
-.dot00 {
+.vertical .up .dot00 {
     top: 6px;
     left: 6px;
 }
-.dot01 {
+.vertical .up .dot01 {
     top: 6px;
-    left: 16px;
+    left: 17px;
 }
-.dot02 {
+.vertical .up .dot02 {
     top: 6px;
-    left: 26px;
+    left: 28px;
 }
 
-.dot10 {
-    top: 16px;
+.vertical .up .dot10 {
+    top: 17px;
     left: 6px;
 }
-.dot11 {
-    top: 16px;
-    left: 16px;
+.vertical .up .dot11 {
+    top: 17px;
+    left: 17px;
 }
-.dot12 {
-    top: 16px;
-    left: 26px;
+.vertical .up .dot12 {
+    top: 17px;
+    left: 28px;
 }
-.dot20 {
-    top: 26px;
+.vertical .up .dot20 {
+    top: 28px;
     left: 6px;
 }
-.dot21 {
-    top: 26px;
-    left: 16px;
+.vertical .up .dot21 {
+    top: 28px;
+    left: 17px;
 }
-.dot22 {
-    top: 26px;
-    left: 26px;
+.vertical .up .dot22 {
+    top: 28px;
+    left: 28px;
+}
+.vertical .down .dot00 {
+    top: 46px;
+    left: 6px;
+}
+.vertical .down .dot01 {
+    top: 46px;
+    left: 17px;
+}
+.vertical .down .dot02 {
+    top: 46px;
+    left: 28px;
+}
+
+.vertical .down .dot10 {
+    top: 57px;
+    left: 6px;
+}
+.vertical .down .dot11 {
+    top: 57px;
+    left: 17px;
+}
+.vertical .down .dot12 {
+    top: 57px;
+    left: 28px;
+}
+.vertical .down .dot20 {
+    top: 68px;
+    left: 6px;
+}
+.vertical .down .dot21 {
+    top: 68px;
+    left: 17px;
+}
+.vertical .down .dot22 {
+    top: 68px;
+    left: 28px;
+}
+.horizontal .up .dot00 {
+    top: 28px;
+    left: 6px;
+}
+.horizontal .up .dot01 {
+    top: 17px;
+    left: 6px;
+}
+.horizontal .up .dot02 {
+    top: 6px;
+    left: 6px;
+}
+
+.horizontal .up .dot10 {
+    top: 28px;
+    left: 17px;
+}
+.horizontal .up .dot11 {
+    top: 17px;
+    left: 17px;
+}
+.horizontal .up .dot12 {
+    top: 6px;
+    left: 17px;
+}
+.horizontal .up .dot20 {
+    top: 28px;
+    left: 28px;
+}
+.horizontal .up .dot21 {
+    top: 17px;
+    left: 28px;
+}
+.horizontal .up .dot22 {
+    top: 6px;
+    left: 28px;
+}
+.horizontal .down .dot00 {
+    top: 28px;
+    left: 46px;
+}
+.horizontal .down .dot01 {
+    top: 17px;
+    left: 46px;
+}
+.horizontal .down .dot02 {
+    top: 6px;
+    left: 46px;
+}
+
+.horizontal .down .dot10 {
+    top: 28px;
+    left: 57px;
+}
+.horizontal .down .dot11 {
+    top: 17px;
+    left: 57px;
+}
+.horizontal .down .dot12 {
+    top: 6px;
+    left: 57px;
+}
+.horizontal .down .dot20 {
+    top: 28px;
+    left: 68px;
+}
+.horizontal .down .dot21 {
+    top: 17px;
+    left: 68px;
+}
+.horizontal .down .dot22 {
+    top: 6px;
+    left: 68px;
 }

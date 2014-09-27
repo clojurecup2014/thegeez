@@ -16,22 +16,69 @@
            (let [id (+ (* up 10) down)]
              [id {:id id
                   :up up
-                  :down down}])))})
+                  :down down
+                  :orientation :vertical}])))})
 
+(def dot-mapping {0 [[0 0 0]
+                     [0 0 0]
+                     [0 0 0]]
+                  1 [[0 0 0]
+                     [0 1 0]
+                     [0 0 0]]
+                  2 [[1 0 0]
+                     [0 0 0]
+                     [0 0 1]]
+                  3 [[1 0 0]
+                     [0 1 0]
+                     [0 0 1]]
+                  4 [[1 0 1]
+                     [0 0 0]
+                     [1 0 1]]
+                  5 [[1 0 1]
+                     [0 1 0]
+                     [1 0 1]]
+                  6 [[1 0 1]
+                     [1 0 1]
+                     [1 0 1]]})
+
+(defn face [[face number orientation] owner]
+  (reify
+    om/IRender
+    (render [_]
+      (apply dom/div #js {:className (str "face " (name face))}
+             (for [i (range 3)
+                   j (range 3)
+                   :when (pos? (get-in dot-mapping [number i j]))]
+               (dom/div #js {:className (str "dot " "dot" i j)}))))))
+
+(defn faces [cursor owner]
+  (reify
+    om/IRenderState
+    (render-state [_ state]
+      (apply dom/div {:className "faces"}
+             (for [f [:up :down]]
+               (do (println "cursor" (om/value cursor) (:orientation cursor)) 
+                   (om/build face [f (get cursor f) (:orientation cursor)])))))))
 
 (defn stone [cursor owner]
   (reify
     om/IRender
     (render [_]
-      (dom/div #js {:className "stone"
-                    :style (if (om/get-state owner :dragging)
-                             #js {:border "3px solid red"
-                                  :top (om/get-state owner :top)
-                                  :left (om/get-state owner :left)}
-                             #js {:border "3px solid green"
-                                  :top (om/get-state owner :top)
-                                  :left (om/get-state owner :left)})}
-               (pr-str (om/value cursor))))
+      (let [orientation (or (om/get-state owner :orientation) :vertical)
+            dragging (om/get-state owner :dragging)]
+        (println "Orientation: " orientation)
+        (dom/div #js {:className (str "stone " (name orientation)
+                                      (when dragging
+                                        " dragging"))
+                      :style (if dragging
+                               #js {:border "3px solid black"
+                                    :top (om/get-state owner :top)
+                                    :left (om/get-state owner :left)}
+                               #js {#_#_:border "3px solid green"
+                                    :top (om/get-state owner :top)
+                                    :left (om/get-state owner :left)})}
+                 (om/build faces (-> (select-keys (val cursor) [:up :down])
+                                     (assoc :orientation orientation))))))
     om/IDidMount
     (did-mount [_]
       (let [moves (async/chan (async/sliding-buffer 1))
@@ -46,28 +93,32 @@
               (om/update-state! owner
                                 (fn [s]
                                   (assoc s
+                                    :orientation (if (< x 200)
+                                                   :vertical
+                                                   :horizontal
+                                                   )
                                     :top (- y 20)
                                     :left (- x 20)))))
             (recur)))
-       (let [node (om/get-node owner)]
-         (gevents/listen node
-                         "mousedown"
-                         (fn [e]
-                           (println "mousedown")
-                           (.preventDefault e)
-                           (om/set-state! owner :dragging true)))
-         (gevents/listen node
-                         "mousemove"
-                         (fn [e]
-                           (println "mousedown")
-                           (.preventDefault e)
-                           (async/put! moves [(.-clientX e) (.-clientY e)])))
-         (gevents/listen node
-                         "mouseup"
-                         (fn [e]
-                           (println "mousedown")
-                           (.preventDefault e)
-                           (om/set-state! owner :dragging false))))))))
+        (let [node (om/get-node owner)]
+          (gevents/listen node
+                          "mousedown"
+                          (fn [e]
+                            (println "mousedown")
+                            (.preventDefault e)
+                            (om/set-state! owner :dragging true)))
+          (gevents/listen node
+                          "mousemove"
+                          (fn [e]
+                            (println "mousedown")
+                            (.preventDefault e)
+                            (async/put! moves [(.-clientX e) (.-clientY e)])))
+          (gevents/listen node
+                          "mouseup"
+                          (fn [e]
+                            (println "mousedown")
+                            (.preventDefault e)
+                            (om/set-state! owner :dragging false))))))))
 
 (defn table [cursor owner]
   (reify
