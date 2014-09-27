@@ -20,5 +20,6 @@ goog.addDependency("../clojure/string.js", ['clojure.string'], ['goog.string', '
 goog.addDependency("../sablono/util.js", ['sablono.util'], ['goog.Uri', 'cljs.core', 'clojure.set', 'clojure.string']);
 goog.addDependency("../sablono/interpreter.js", ['sablono.interpreter'], ['sablono.util', 'cljs.core', 'clojure.string']);
 goog.addDependency("../sablono/core.js", ['sablono.core'], ['goog.dom', 'sablono.util', 'cljs.core', 'sablono.interpreter', 'clojure.string', 'clojure.walk']);
-goog.addDependency("../net/thegeez/datominoes/ui.js", ['net.thegeez.datominoes.ui'], ['cljs.core', 'net.thegeez.datominoes.react', 'datascript', 'cljs.core.async', 'sablono.core']);
-goog.addDependency("../net/thegeez/datominoes/core.js", ['net.thegeez.datominoes.core'], ['net.thegeez.datominoes.ui', 'cljs.core', 'datascript', 'cljs.core.async', 'clojure.string']);
+goog.addDependency("../net/thegeez/datominoes/db.js", ['net.thegeez.datominoes.db'], ['cljs.core', 'datascript']);
+goog.addDependency("../net/thegeez/datominoes/ui.js", ['net.thegeez.datominoes.ui'], ['cljs.core', 'net.thegeez.datominoes.react', 'datascript', 'cljs.core.async', 'sablono.core', 'net.thegeez.datominoes.db', 'goog.events']);
+goog.addDependency("../net/thegeez/datominoes/core.js", ['net.thegeez.datominoes.core'], ['net.thegeez.datominoes.ui', 'cljs.core', 'datascript', 'cljs.core.async', 'net.thegeez.datominoes.db', 'clojure.string']);

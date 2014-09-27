@@ -8,28 +8,34 @@
 (defn node []
   (.getDOMNode *component*))
 
-(defn component [renderer & {:keys [will-update did-update]}]
+(defn component [renderer & {:keys [will-update did-update did-mount]}]
   (let [react-component
         (.createClass js/React
-           #js {:getInitialState (fn [] (atom {}))
-                :render
-                (fn []
-                  (this-as this
-                    (binding [*component* this]
-                      (apply renderer (aget (.-props this) "args")))))
-                :componentWillUpdate
-                (fn [_ _]
-                  (when will-update
-                    (this-as this
-                      (binding [*component* this]
-                        (will-update (node))))))
-                :componentDidUpdate
-                (fn [_ _]
-                  (when did-update
-                    (this-as this
-                      (binding [*component* this]
-                        (did-update (node))))))
-                })]
+                      #js {:getInitialState (fn [] (atom {}))
+                           :render
+                           (fn []
+                             (this-as this
+                                      (binding [*component* this]
+                                        (apply renderer (aget (.-props this) "args")))))
+                           :componentWillUpdate
+                           (fn [_ _]
+                             (when will-update
+                               (this-as this
+                                        (binding [*component* this]
+                                          (will-update (node))))))
+                           :componentDidUpdate
+                           (fn [_ _]
+                             (when did-update
+                               (this-as this
+                                        (binding [*component* this]
+                                          (did-update (node))))))
+                           :componentDidMount
+                           (fn [_ _]
+                             (when did-mount
+                               (this-as this
+                                        (binding [*component* this]
+                                          (did-mount (node) (aget (.-props this) "args"))))))
+                           })]
     (fn [& args]
       (react-component #js {:args args}))))
 
