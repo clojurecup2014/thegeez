@@ -16,8 +16,12 @@
     width: 80px;
     height: 40px;
 }
-.stone:hover {
+.cursor_hand {
     cursor: pointer;
+}
+
+.cursor_drag {
+    cursor: move;
 }
 
 .stone.dragging {

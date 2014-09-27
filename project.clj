@@ -6,8 +6,7 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2342"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
-                 [om "0.7.1"]
-                 [com.facebook/react "0.11.2"]]
+                 [datascript "0.4.1"]]
   :plugins [[lein-cljsbuild "1.0.3"]]
   :source-paths ["src/clj"]
   :cljsbuild {:builds {:dev
@@ -20,8 +19,6 @@
                        :prod
                        {:source-paths ["src/cljs"]
                         :compiler {
-                                   :externs ["react/externs/react.js" "datascript/externs.js"]
-                                   :preamble ["react/react.min.js"]
                                    :output-to "resources/datominoes.min.js"
                                    :optimizations :advanced
                                    :pretty-print false
