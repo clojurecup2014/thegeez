@@ -2,6 +2,9 @@
 
 Clojure Cup 2014 entry
 
+# Judges Notes
+- "Hello World" project.clj/lib/compilation strip-mined from https://github.com/tonsky/datascript-chat
+
 ## About
 
 Written by:
