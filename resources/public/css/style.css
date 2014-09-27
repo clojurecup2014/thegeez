@@ -23,6 +23,7 @@
 .stone.dragging {
     border: 2px solid red;
     cursor: move;
+    z-index: 99;
 }
 
 .faces {
