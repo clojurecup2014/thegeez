@@ -37,15 +37,14 @@
 
 (defn stone-element [stone-id up down]
   (dom/element :div {:id stone-id
-                     :class "stone vertical back"}
+                     :class "stone vertical back preloading"}
                (apply dom/element :div {:class "face up"}
                       (dots up))
                (apply dom/element :div {:class "face down"}
                       (dots down))))
 
 (defn in-our-region [x y]
-  (println "x y" x y)
-  (< x 300))
+  (< 462 y))
 
 (def z-level (atom 100))
 
@@ -89,33 +88,51 @@
 
 (defn anim-deal [db conn]
   (let [game (t/find-game db)
-
+        stock-stones (:table/stock game)
         our-stones (:player/stones (:game/player1 game))
-        _ (println "our-stones" our-stones)
+        their-stones (:player/stones (:game/player2 game))
+        stock-deal (map (fn [idx {el :dom/el}]
+                        [false
+                         el
+                         [(+ 24 (* (rand) 75)) (+ 84 (* (rand) 54))]
+                         (fn []
+                           (dom/remove-class el "preloading")
+                           (set-drag-handler el (undraggable-handler conn)))])
+                      (range)
+                      (concat stock-stones
+                              our-stones
+                              their-stones))
         our-deal (map (fn [idx {el :dom/el}]
-                        [el
-                         [(+ 120 (* idx 53)) (+ 300 (* idx 4))]
+                        [true
+                         el
+                         [(+ 300 (* idx 26)) 464]
                          (fn []
                            (dom/remove-class el "back")
                            (set-drag-handler el (home-region-handler conn)))])
                       (range)
                       our-stones)
-        their-stones (:player/stones (:game/player2 game))
+
         their-deal (map (fn [idx {el :dom/el}]
-                        [el
-                         [(+ 120 (* idx 53)) (+ 30 (* idx 4))]])
+                        [true
+                         el
+                         [(+ 300 (* idx 26)) 14]])
                       (range)
                       their-stones)
-        actions (concat our-deal
+        actions (concat stock-deal
+                        our-deal
                         their-deal)
         step (fn step [[action & actions]]
                (when action
-                 (let [[el to f] action]
+                 (let [[slide el to f] action]
                    (show-on-top el)
-                   (animator/slide el to
-                                   (fn []
-                                     (when f (f))
-                                     (step actions))))))]
+                   (if slide
+                     (animator/slide el to
+                                     (fn []
+                                       (when f (f))
+                                       (step actions)))
+                     (do (apply dom/set-position el to)
+                         (when f (f))
+                         (step actions))))))]
     (step actions)))
 
 
@@ -179,7 +196,7 @@
                     :stone-el stone-el}))]
     (doseq [{:keys [stone-el idx]} stones]
       (set! (.-anim-idx stone-el) idx)
-      (dom/append (dom/get-element "stock") stone-el))
+      (dom/append (dom/get-element "table") stone-el))
     (let [game-eid (:db/id (t/find-game @conn))]
       (println "game-eid" game-eid)
       (d/transact! conn (for [{:keys [id idx stone-el]} stones]
