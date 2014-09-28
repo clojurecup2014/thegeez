@@ -93,6 +93,15 @@
 (defn show-on-top [stone]
   (set! (.. stone -style -zIndex) (swap! z-level inc)))
 
+(defn turn-stone [stone orientation]
+  (let [el (:dom/el stone)]
+    (doto el
+      (dom/remove-class "south")
+      (dom/remove-class "west")
+      (dom/remove-class "north")
+      (dom/remove-class "east"))
+    (dom/add-class el (name orientation))))
+
 (defn set-drag-handler [stone-el handler]
   (let [cursor (:cursor handler)]
     (if (= cursor :hand)
@@ -187,8 +196,7 @@
                   (do
                     (turn-stone stone turn)
                     (dom/add-class (:dom/el hit) "dropable"))
-                  (turn-stone stone :south))
-                (println "DRAG :)" hit "---" place-regions "--" x y ))))))
+                  (turn-stone stone :south)))))))
 
 (defn set-msg [msg]
   (println "MSG: " msg)
@@ -249,16 +257,6 @@
         :west "horizontal"
         :east "horizontal"} (:place/orientation place)))
 
-(defn turn-stone [stone orientation]
-  (let [el (:dom/el stone)]
-    (doto el
-      (dom/remove-class "south")
-      (dom/remove-class "west")
-      (dom/remove-class "north")
-      (dom/remove-class "east"))
-    (condp = orientation
-      (dom/add-class el (name orientation)))))
-
 (defn draw [report conn]
   (let [db (:db-after report)
         game (t/find-game db)]
@@ -305,67 +303,67 @@
                               [:span " by "]
                               [:a {:href "http://thegeez.net"} "thegeez.net"]
                               [:span " - "]
-                              [:a {:href "http://twitter.com/thegeez"} " @thegeez"]]))))
-  (let [container-wrap (let [r (dom/get-bounds (dom/get-element "table"))]
-                         (goog.math.Rect. (+ (. r -left) 4) (+ (. r -top) 4)
-                                          (- (. r -width) 3 51) (- (. r -height) 3 51)))
-        stones (for [down (range 7)
-                     up (range down 7)]
-                 (let [idx (+ down (* up 7))
-                       stone-id (str "stone-" (+ (* up 10) down))
-                       stone-el (stone-element stone-id up down)
-                       dragger (doto (goog.fx.Dragger. stone-el)
-                                 (.setLimits container-wrap))]
-                   (set! (. stone-el -dispose) #(.-dispose dragger))
-                   (set-drag-handler stone-el
-                                     (undraggable-handler db conn))
-                   (events/listen dragger
-                                  fxdrag/EventType.START
-                                  (fn [event]
-                                    ((:drag-start (. stone-el -drag-handler)) stone-id event)))
-                   (events/listen dragger
-                                  fxdrag/EventType.DRAG
-                                  (fn [event]
-                                    ((:drag (. stone-el -drag-handler)) stone-id event)))
-                   (events/listen dragger
-                                  fxdrag/EventType.END
-                                  (fn [event]
-                                    ((:drag-end (. stone-el -drag-handler)) stone-id event)))
-                   {:id stone-id
-                    :idx idx
-                    :stone-el stone-el
-                    :up up
-                    :down down}))
-        places (for [i (range 20)]
-                 (let [id (str "place-" i)]
-                   {:id id
-                    :place-el (dom/element :div {:id id
-                                                 :class "place unused"})}))]
-    (doseq [{:keys [stone-el idx]} stones]
-      (set! (.-anim-idx stone-el) idx)
-      (dom/append (dom/get-element "table") stone-el))
-    (doseq [place places]
-      (dom/append (dom/get-element "table") (:place-el place)))
-    (let [game-eid (:db/id (t/find-game @conn))]
-      (d/transact! conn
-                   (-> []
-                       (into (for [{:keys [id stone-el up down]} stones]
-                               {:db/id (d/tempid :db)
-                                :dom/id id
-                                :dom/el stone-el
-                                :table/_stock game-eid
-                                :stone/orientation :south
-                                :stone/up up
-                                :stone/down down}))
-                       (into (for [{:keys [id place-el]} places]
-                               {:db/id (d/tempid :db)
-                                :dom/id id
-                                :dom/el place-el
-                                :table/_places game-eid
-                                :place/left 380
-                                :place/top 240
-                                :place/used false
-                                :place/orientation :south})))))))
+                              [:a {:href "http://twitter.com/thegeez"} " @thegeez"]])))
+    (let [container-wrap (let [r (dom/get-bounds (dom/get-element "table"))]
+                           (goog.math.Rect. (+ (. r -left) 4) (+ (. r -top) 4)
+                                            (- (. r -width) 3 51) (- (. r -height) 3 51)))
+          stones (for [down (range 7)
+                       up (range down 7)]
+                   (let [idx (+ down (* up 7))
+                         stone-id (str "stone-" (+ (* up 10) down))
+                         stone-el (stone-element stone-id up down)
+                         dragger (doto (goog.fx.Dragger. stone-el)
+                                   (.setLimits container-wrap))]
+                     (set! (. stone-el -dispose) #(.-dispose dragger))
+                     (set-drag-handler stone-el
+                                       (undraggable-handler db conn))
+                     (events/listen dragger
+                                    fxdrag/EventType.START
+                                    (fn [event]
+                                      ((:drag-start (. stone-el -drag-handler)) stone-id event)))
+                     (events/listen dragger
+                                    fxdrag/EventType.DRAG
+                                    (fn [event]
+                                      ((:drag (. stone-el -drag-handler)) stone-id event)))
+                     (events/listen dragger
+                                    fxdrag/EventType.END
+                                    (fn [event]
+                                      ((:drag-end (. stone-el -drag-handler)) stone-id event)))
+                     {:id stone-id
+                      :idx idx
+                      :stone-el stone-el
+                      :up up
+                      :down down}))
+          places (for [i (range 20)]
+                   (let [id (str "place-" i)]
+                     {:id id
+                      :place-el (dom/element :div {:id id
+                                                   :class "place unused"})}))]
+      (doseq [{:keys [stone-el idx]} stones]
+        (set! (.-anim-idx stone-el) idx)
+        (dom/append (dom/get-element "table") stone-el))
+      (doseq [place places]
+        (dom/append (dom/get-element "table") (:place-el place)))
+      (let [game-eid (:db/id (t/find-game @conn))]
+        (d/transact! conn
+                     (-> []
+                         (into (for [{:keys [id stone-el up down]} stones]
+                                 {:db/id (d/tempid :db)
+                                  :dom/id id
+                                  :dom/el stone-el
+                                  :table/_stock game-eid
+                                  :stone/orientation :south
+                                  :stone/up up
+                                  :stone/down down}))
+                         (into (for [{:keys [id place-el]} places]
+                                 {:db/id (d/tempid :db)
+                                  :dom/id id
+                                  :dom/el place-el
+                                  :table/_places game-eid
+                                  :place/left 380
+                                  :place/top 240
+                                  :place/used false
+                                  :place/orientation :south}))))))))
 
 (defn start-game-panel [conn]
   (d/listen! conn (fn [report]

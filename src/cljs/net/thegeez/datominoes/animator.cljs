@@ -2,7 +2,7 @@
   (:require [net.thegeez.datominoes.dom-helpers :as dom]))
 
 (def EL 0)
-(def START 1)
+(def BEGIN 1)
 (def DRAW 2)
 (def TO 3)
 (def STEP 4)
@@ -11,7 +11,7 @@
 (def DY 7)
 (def FINISH 8)
 
-(def FIELD_COUNT (count [EL START DRAW TO STEP STEPS DX DY FINISH]))
+(def FIELD_COUNT (count [EL BEGIN DRAW TO STEP STEPS DX DY FINISH]))
 
 (def a (make-array (+ (* 52 FIELD_COUNT)
                       1 ;; DO_DRAW
@@ -27,7 +27,7 @@
       (when (aget a (+ i DRAW)) ;; draw
         (aset a DO_DRAW 1)
         (let [el (aget a (+ i EL))
-              [start-x start-y] (aget a (+ i START))
+              [start-x start-y] (aget a (+ i BEGIN))
               [x y :as to] (aget a (+ i TO))
               step (dec (aget a (+ i STEP)))
               dx (aget a (+ i DX))
@@ -66,7 +66,7 @@
         dx (/ (- to-x from-x) steps)
         dy (/ (- to-y from-y) steps)]
     (aset a i el)
-    (aset a (+ i START) from)
+    (aset a (+ i BEGIN) from)
     (aset a (+ i DRAW) true)
     (aset a (+ i TO) to)
     (aset a (+ i STEP) steps)
