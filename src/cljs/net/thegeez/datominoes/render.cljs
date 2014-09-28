@@ -54,27 +54,37 @@
           sd (:stone/down stone)
           ps (:place/for place)
           po (:place/orientation place)
+          pa (:place/attached place)
           pso (:stone/orientation ps)
-          pu (:stone/up ps)
-          pd (:stone/down ps)]
-      (println "match " su sd po pu pd)
+          p (if (= pa :stone/up) 
+              (:stone/up ps)
+              (:stone/down ps))]
+      (println "match " su sd po p)
       (cond
        (and (= po :north)
-            (= pso :south)
-            (= su pu))
+            (= su p))
        :north
        (and (= po :north)
-            (= pso :south)
-            (= sd pu))
+            (= sd p))
        :south
        (and (= po :south)
-            (= pso :south)
-            (= su pd))
+            (= su p))
        :south
        (and (= po :south)
-            (= pso :south)
-            (= sd pd))
+            (= sd p))
        :north
+       (and (= po :east)
+            (= su p))
+       :west
+       (and (= po :east)
+            (= sd p))
+       :east
+       (and (= po :west)
+            (= sd p))
+       :east
+       (and (= po :west)
+            (= su p))
+       :west
        :else
        nil))))
 
@@ -158,7 +168,10 @@
                         (set-drag-handler stone-el (undraggable-handler db conn))
                         (animator/slide stone-el [(:place/left hit) (:place/top hit)]
                                         (fn []
-                                          (d/transact! conn [[:db.fn/call t/stone-placed (:db/id stone) (:db/id hit)]]))))
+                                          (d/transact! conn
+                                                       (into [[:db.fn/call t/stone-placed (:db/id stone) (:db/id hit)]]
+                                                             (when-not (= turn (:stone/orientation stone))
+                                                               [[:db.fn/call t/turn-stone (:db/id stone) turn]]))))))
                       ((:drag-end base) stone-id event))))
       :drag (fn [stone-id event]
               (doseq [place-el place-els]

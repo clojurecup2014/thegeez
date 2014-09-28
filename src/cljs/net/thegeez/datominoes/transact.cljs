@@ -48,7 +48,7 @@
         p2-eid (:db/id (:game/player2 game))
         stones (-> (:table/stock game)
                    (shuffle-set 14))
-        [player1-stones stones] (split-at 7 stones)
+        [player1-stones stones] (split-at #_7 18 stones)
         [player2-stones stock] (split-at 7 stones)
         place-eid (:db/id (first (:table/places game)))]
     (into [[:db.fn/call log-event :deal]
@@ -82,16 +82,65 @@
       :game/turn turn
       :game/stage :playing}]))
 
+(defn turn-stone [db stone-eid orientation]
+  (println "turn-stone" stone-eid)
+  (let [stone (d/entity db stone-eid)]
+    [{:db/id stone-eid
+      :stone/up (:stone/down stone)
+      :stone/down (:stone/up stone)
+      :stone/orientation orientation}]))
+
 (defn stone-placed [db stone-eid place-eid]
   (println "Placed" stone-eid place-eid )
   (let [game (find-game db)
         game-eid (:db/id game)
         stone (d/entity db stone-eid)
         place (d/entity db place-eid)
+        place-eids (map first
+                        (d/q '{:find [?e]
+                               :where [[_ :table/places ?e]
+                                       [?e :place/used false]]}
+                             db))
         new-places (if-let [from (:place/for place)]
-                     (do 
-                       (println "PLaces has from " from)
-                       [])
+                     (cond
+                      (= (:stone/up stone)
+                         (:stone/down stone))
+                      []
+                      (= (:place/orientation place) :south) 
+                      (let [place-eids (take 3 place-eids)]
+                        (for [[eid [dl dt face orientation]]
+                              (map vector
+                                   place-eids
+                                   [[-46 22 :stone/down :west]
+                                    [0 46 :stone/down :south]
+                                    [24 22 :stone/down :east]])]
+                          {:db/id eid, :place/used true, :place/top (+ (:place/top place) dt), :place/left (+ (:place/left place) dl), :place/orientation orientation, :place/for stone-eid, :place/attached face}
+                          ))
+                      (= (:place/orientation place) :north) 
+                      (let [place-eids (take 3 place-eids)]
+                        (for [[eid [dl dt face orientation]]
+                              (map vector
+                                   place-eids
+                                   [[-46 0 :stone/up :west]
+                                    [0 -46 :stone/up :north]
+                                    [24 0 :stone/up :east]])]
+                          {:db/id eid, :place/used true, :place/top (+ (:place/top place) dt), :place/left (+ (:place/left place) dl), :place/orientation orientation, :place/for stone-eid, :place/attached face}
+                          ))
+                      (= (:place/orientation place) :east) 
+                      (let [place-eids (take 3 place-eids)]
+                        (for [[eid [dl dt face orientation]]
+                              (map vector
+                                   place-eids
+                                   [[24 -46 :stone/down :north]
+                                    [46 0 :stone/down :east]
+                                    [24 24 :stone/down :south]])]
+                          {:db/id eid, :place/used true, :place/top (+ (:place/top place) dt), :place/left (+ (:place/left place) dl), :place/orientation orientation, :place/for stone-eid, :place/attached face}
+                          ))
+
+                       :else 
+                       (do 
+                         (println "PLaces has from " from)
+                         []))
                      (if (= (:stone/up stone)
                             (:stone/down stone))
                        (do
@@ -125,15 +174,15 @@
                             :place/attached face}
                            ))))]
     (println "Place" new-places)
-    (into
+    (->
      [[:db.fn/call log-event :stone-placed stone-eid place-eid]
       [:db/add place-eid :place/used false]
       [:db/retract (:db/id (first (:player/_stones stone))) :player/stones stone-eid]]
-     (mapcat (fn [new-place]
-               (println "new-place" new-place)
-               [[:db/add game-eid :table/places (:db/id new-place)]
-                new-place])
-             new-places))))
+     (into (mapcat (fn [new-place]
+                     (println "new-place" new-place)
+                     [[:db/add game-eid :table/places (:db/id new-place)]
+                      new-place])
+                   new-places)))))
 
 
 (def schema

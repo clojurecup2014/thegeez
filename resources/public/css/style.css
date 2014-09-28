@@ -328,6 +328,80 @@
     top: 2px;
     left: 36px;
 }
+.east .down .dot00 {
+    top: 14px;
+    left: 2px;
+}
+.east .down .dot01 {
+    top: 8px;
+    left: 2px;
+}
+.east .down .dot02 {
+    top: 2px;
+    left: 2px;
+}
+
+.east .down .dot10 {
+    top: 14px;
+    left: 8px;
+}
+.east .down .dot11 {
+    top: 8px;
+    left: 8px;
+}
+.east .down .dot12 {
+    top: 2px;
+    left: 8px;
+}
+.east .down .dot20 {
+    top: 14px;
+    left: 14px;
+}
+.east .down .dot21 {
+    top: 8px;
+    left: 14px;
+}
+.east .down .dot22 {
+    top: 2px;
+    left: 14px;
+}
+.east .up .dot00 {
+    top: 14px;
+    left: 24px;
+}
+.east .up .dot01 {
+    top: 8px;
+    left: 24px;
+}
+.east .up .dot02 {
+    top: 2px;
+    left: 24px;
+}
+
+.east .up .dot10 {
+    top: 14px;
+    left: 30px;
+}
+.east .up .dot11 {
+    top: 8px;
+    left: 30px;
+}
+.east .up .dot12 {
+    top: 2px;
+    left: 30px;
+}
+.east .up .dot20 {
+    top: 14px;
+    left: 36px;
+}
+.east .up .dot21 {
+    top: 8px;
+    left: 36px;
+}
+.east .up .dot22 {
+    top: 2px;
+    left: 36px;
+}
 
 .place {
     width: 24px;
