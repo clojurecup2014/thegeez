@@ -36,7 +36,7 @@
 
 (defn stone-element [stone-id up down]
   (dom/element :div {:id stone-id
-                     :class "stone vertical"}
+                     :class "stone horizontal"}
                (apply dom/element :div {:class "face up"}
                       (dots up))
                (apply dom/element :div {:class "face down"}
@@ -100,9 +100,9 @@
                             [:a {:href "http://twitter.com/thegeez"} " @thegeez"]])))
   (let [container-wrap (let [r (dom/get-bounds (dom/get-element "table"))]
                            (goog.math.Rect. (. r -left) (. r -top) (- (. r -width) 0) (- (. r -height) 0)))
-        stones (for [up (range 7)
-                     down (range up)]
-                 (let [idx (+ up (* down 7))
+        stones (for [down (range 7)
+                     up (range down 7)]
+                 (let [idx (+ down (* up 7))
                        stone-id (str "stone-" (+ (* up 10) down))
                        stone-el (stone-element stone-id up down)
                        dragger (doto (goog.fx.Dragger. stone-el)
