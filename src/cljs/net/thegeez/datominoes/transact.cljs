@@ -23,7 +23,7 @@
                     db))
        (d/entity db)))
 
-(defn game-created [db player1-name player2-name us]
+(defn create-game [db player1-name player2-name us]
   (let [game (find-game db)]
     (println "game" (d/touch game))
     [[:db.fn/call log-event :game-created player1-name player2-name]
@@ -44,26 +44,54 @@
   (let [_ (println "deal")
         game (find-game db)
         game-eid (:db/id game)
+        p1-eid (:db/id (:game/player1 game))
+        p2-eid (:db/id (:game/player2 game))
         stones (-> (:table/stock game)
                    (shuffle-set 14))
         [player1-stones stones] (split-at 7 stones)
-        [player2-stones stock] (split-at 7 stones)]
+        [player2-stones stock] (split-at 7 stones)
+        place-eid (:db/id (first (:table/places game)))]
     (into [[:db.fn/call log-event :deal]
-           [:db/add game-eid :game/stage :deal]]
+           {:db/id game-eid
+            :game/stage :deal
+            :table/tree place-eid}
+           {:db/id place-eid
+            :place/used true
+            :place/root true
+            :place/orientation :vertical}]
           (mapcat identity
                   (for [[player-eid player-stones]
-                        [[(:db/id (:game/player1 game)) player1-stones]
-                         [(:db/id (:game/player2 game)) player2-stones]]
+                        [[p1-eid player1-stones]
+                         [p2-eid player2-stones]]
                         ps player-stones]
                     [[:db/add player-eid
                       :player/stones (:db/id ps)]
                      [:db/retract game-eid
                       :table/stock (:db/id ps)]])))))
 
+(defn assign-turn [db]
+  (let [game (find-game db)
+        game-eid (:db/id game)
+        p1-eid (:db/id (:game/player1 game))
+        p2-eid (:db/id (:game/player2 game))
+        current-turn (:db/id (:game/turn (find-game db)))
+        turn (get {nil p1-eid
+                   p1-eid p2-eid
+                   p2-eid p1-eid} current-turn)]
+    [[:db.fn/call log-event :assign-turn]
+     {:db/id  game-eid
+      :game/turn turn
+      :game/stage :playing}]))
+
+
 (def schema
   {:game/player1 {:db/valueType :db.type/ref}
    :game/player2 {:db/valueType :db.type/ref}
+   :game/turn {:db/valueType :db.type/ref}
    :table/stock {:db/valueType :db.type/ref
                  :db/cardinality :db.cardinality/many}
+   :table/tree {:db/valueType :db.type/ref}
+   :table/places {:db/valueType :db.type/ref
+                  :db/cardinality :db.cardinality/many}
    :player/stones {:db/valueType :db.type/ref
                    :db/cardinality :db.cardinality/many}})

@@ -5,6 +5,14 @@
 (defmulti handle
   (fn [event args report conn] event))
 
+(defmethod handle :game-created
+  [event args report conn]
+  (d/transact! conn [[:db.fn/call t/deal]]))
+
+(defmethod handle :deal
+  [event args report conn]
+  (d/transact! conn [[:db.fn/call t/assign-turn]]))
+
 (defmethod handle :default
   [event args report conn]
   (println "handle: " (pr-str [event args #_report #_conn])))
@@ -17,5 +25,4 @@
                                                              [?e :args ?args]]}
                                                    db-after (:max-tx db-after)))]
                       (handle event args report conn))))
-  (d/transact! conn [[:db.fn/call t/game-created "Player One" "AI"]])
-  (d/transact! conn [[:db.fn/call t/deal]]))
+  (d/transact! conn [[:db.fn/call t/create-game "Player One" "AI"]]))

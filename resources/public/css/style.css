@@ -258,3 +258,19 @@
     top: 2px;
     left: 36px;
 }
+
+.place {
+    width: 24px;
+    height: 46px;
+    background: orange;
+    position: absolute;
+}
+.place.unused {
+    display: none;
+}
+.place.dropable {
+    border: 6px solid orange;
+    background-color: orange;
+    margin-top: -6px;
+    margin-left: -6px;
+}

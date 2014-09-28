@@ -58,14 +58,14 @@
       (dom/remove-class stone-el "cursor_hand"))
     (set! (. stone-el -drag-handler) handler)))
 
-(defn undraggable-handler [conn]
+(defn undraggable-handler [db conn]
   {:cursor :none
    :drag-start (fn [stone-id event]
                  (. event (preventDefault)))
    :drag (fn [stone-id event])
    :drag-end (fn [stone-id event])})
 
-(defn home-region-handler [conn]
+(defn home-region-handler [db conn]
   {:cursor :hand
    :drag-start (fn [stone-id event]
                  (let [stone-el (dom/get-element stone-id)]
@@ -82,6 +82,46 @@
                  (when-not (in-our-region x y)
                    (animator/slide stone-el (. stone-el -drag-origin)))))})
 
+(defn home-drag-handler [db conn]
+  (let [places (for [[id] (d/q '{:find [?p]
+                                 :where [[?g :game/name]
+                                         [?g :table/places ?p]
+                                         [?p :place/used true]]}
+                               db)]
+                 (d/entity db id))
+        place-regions (into {}
+                            (for [place places]
+                              [(if (= (:place/orientation place) :vertical)
+                                 [[(:place/left place) (+ (:place/left place) 24)]
+                                  [(:place/top place) (+ (:place/top place) 46)]])
+                               place]))
+        place-els (map :dom/el places)
+        hit (fn [event]
+              (let [x (.-clientX event)
+                    y (.-clientY event)]
+                (some
+                 (fn [[[[xl xr] [yt yb]] place]]
+                   (println "hit? " [[xl xr] [yt yb]] x y)
+                   (when (and (<= xl x xr)
+                              (<= yt y yb))
+                     place))
+                 place-regions)))
+        base (home-region-handler db conn)]
+    (assoc base
+      :drag-end (fn [stone-id event]
+                  (doseq [place-el place-els]
+                    (dom/remove-class place-el "dropable"))
+                  (if-let [hit (hit event)] 
+                    (println "Place stone on hit :)")
+                    ((:drag-end base) stone-id event)))
+      :drag (fn [stone-id event]
+              (doseq [place-el place-els]
+                (dom/remove-class place-el "dropable"))
+              (let [hit (hit event)]
+                (when hit
+                  (dom/add-class (:dom/el hit) "dropable"))
+                (println "DRAG :)" hit "---" place-regions "--" x y ))))))
+
 (defn set-msg [msg]
   (println "MSG: " msg)
   (dom/set-text (dom/get-element "msg") msg))
@@ -97,7 +137,7 @@
                          [(+ 24 (* (rand) 75)) (+ 84 (* (rand) 54))]
                          (fn []
                            (dom/remove-class el "preloading")
-                           (set-drag-handler el (undraggable-handler conn)))])
+                           (set-drag-handler el (undraggable-handler db conn)))])
                       (range)
                       (concat stock-stones
                               our-stones
@@ -108,7 +148,7 @@
                          [(+ 300 (* idx 26)) 464]
                          (fn []
                            (dom/remove-class el "back")
-                           (set-drag-handler el (home-region-handler conn)))])
+                           (set-drag-handler el (home-region-handler db conn)))])
                       (range)
                       our-stones)
 
@@ -125,7 +165,7 @@
                (when action
                  (let [[slide el to f] action]
                    (show-on-top el)
-                   (if slide
+                   (if false #_slide ;; for dev speedup
                      (animator/slide el to
                                      (fn []
                                        (when f (f))
@@ -139,30 +179,44 @@
 (defn draw [report conn]
   (let [db (:db-after report)
         game (t/find-game db)]
+    (println "Game: " (d/touch game))
     (cond
      (not (:game/stage game))
      (set-msg "Game created.")
      (= :deal (:game/stage game))
      (do (set-msg "Dealing ...")
-         (anim-deal db conn)))))
+         (anim-deal db conn))
+     (= :playing (:game/stage game))
+     (if (= (:game/turn game) (:game/player1 game)) 
+       (do (set-msg "It's your turn, attach a stone on the table or pick from the stock if possible")
+           (println "Draw tree" (d/touch (:table/tree game)))
+           (doseq [stone (:player/stones (:game/player1 game))]
+             (set-drag-handler (:dom/el stone) (home-drag-handler db conn)))
+           (let [root (:table/tree game)
+                 root-el (:dom/el root)]
+             (doto root-el
+               (dom/remove-class "unused")
+               (dom/set-position (:place/left root) (:place/top root)))))
+       (do (set-msg "Opponent to move"))))))
 
 
 (defn draw-table [conn]
-  (doto (.-body js/document)
-    (dom/append (dom/build [:div {:id "table"}
-                            [:div {:id "their_region"
-                                   :class "region their_region"}]
-                            [:div.stock {:id "stock"}]
-                            [:div {:id "our_region"
-                                   :class "region our_region"}]]))
-    (dom/append (dom/build [:div.msg {:id "msg"}]))
-    (dom/append (dom/build [:div {:id "footer"}
-                            "Datominoes for "
-                            [:a {:href "http://clojurecup.com"} " clojurecup 2014"]
-                            [:span " by "]
-                            [:a {:href "http://thegeez.net"} "thegeez.net"]
-                            [:span " - "]
-                            [:a {:href "http://twitter.com/thegeez"} " @thegeez"]])))
+  (let [db @conn]
+    (doto (.-body js/document)
+      (dom/append (dom/build [:div {:id "table"}
+                              [:div {:id "their_region"
+                                     :class "region their_region"}]
+                              [:div.stock {:id "stock"}]
+                              [:div {:id "our_region"
+                                     :class "region our_region"}]]))
+      (dom/append (dom/build [:div.msg {:id "msg"}]))
+      (dom/append (dom/build [:div {:id "footer"}
+                              "Datominoes for "
+                              [:a {:href "http://clojurecup.com"} " clojurecup 2014"]
+                              [:span " by "]
+                              [:a {:href "http://thegeez.net"} "thegeez.net"]
+                              [:span " - "]
+                              [:a {:href "http://twitter.com/thegeez"} " @thegeez"]]))))
   (let [container-wrap (let [r (dom/get-bounds (dom/get-element "table"))]
                          (goog.math.Rect. (+ (. r -left) 4) (+ (. r -top) 4)
                                           (- (. r -width) 3 51) (- (. r -height) 3 51)))
@@ -175,10 +229,7 @@
                                  (.setLimits container-wrap))]
                    (set! (. stone-el -dispose) #(.-dispose dragger))
                    (set-drag-handler stone-el
-                                     (home-region-handler conn)
-                                     
-
-                                     #_(undraggable-handler conn))
+                                     (undraggable-handler db conn))
                    (events/listen dragger
                                   fxdrag/EventType.START
                                   (fn [event]
@@ -193,18 +244,34 @@
                                     ((:drag-end (. stone-el -drag-handler)) stone-id event)))
                    {:id stone-id
                     :idx idx
-                    :stone-el stone-el}))]
+                    :stone-el stone-el}))
+        places (for [i (range 20)]
+                 (let [id (str "place-" i)]
+                   {:id id
+                    :place-el (dom/element :div {:id id
+                                                 :class "place unused"})}))]
     (doseq [{:keys [stone-el idx]} stones]
       (set! (.-anim-idx stone-el) idx)
       (dom/append (dom/get-element "table") stone-el))
+    (doseq [place places]
+      (dom/append (dom/get-element "table") (:place-el place)))
     (let [game-eid (:db/id (t/find-game @conn))]
-      (println "game-eid" game-eid)
-      (d/transact! conn (for [{:keys [id idx stone-el]} stones]
-                          {:db/id (d/tempid :db)
-                           :dom/id id
-                           :dom/el stone-el
-                           :table/_stock game-eid
-                           :stone/orientation :south})))))
+      (d/transact! conn
+                   (-> []
+                       (into (for [{:keys [id stone-el]} stones]
+                               {:db/id (d/tempid :db)
+                                :dom/id id
+                                :dom/el stone-el
+                                :table/_stock game-eid
+                                :stone/orientation :south}))
+                       (into (for [{:keys [id place-el]} places]
+                               {:db/id (d/tempid :db)
+                                :dom/id id
+                                :dom/el place-el
+                                :table/_places game-eid
+                                :place/left 380
+                                :place/top 240
+                                :place/used false})))))))
 
 (defn start-game-panel [conn]
   (d/listen! conn (fn [report]
