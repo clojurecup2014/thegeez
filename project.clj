@@ -21,9 +21,9 @@
                         :compiler {
                                    :output-to "resources/datominoes.min.js"
                                    :optimizations :advanced
-                                   :pretty-print false
-                                   ;; :pretty-print true
-                                   ;; :print-input-delimiter true
-                                   ;; :pseudo-names true
+                                   ;;:pretty-print false
+                                    :pretty-print true
+                                    :print-input-delimiter true
+                                    :pseudo-names true
 
                                    }}}})

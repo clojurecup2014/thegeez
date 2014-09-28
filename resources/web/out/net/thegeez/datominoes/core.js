@@ -1,0 +1,25 @@
+// Compiled by ClojureScript 0.0-2342
+goog.provide('net.thegeez.datominoes.core');
+goog.require('cljs.core');
+goog.require('net.thegeez.datominoes.engine');
+goog.require('net.thegeez.datominoes.transact');
+goog.require('goog.events');
+goog.require('cljs.core.async');
+goog.require('net.thegeez.datominoes.transact');
+goog.require('net.thegeez.datominoes.render');
+goog.require('datascript');
+goog.require('cljs.core.async');
+goog.require('net.thegeez.datominoes.engine');
+goog.require('net.thegeez.datominoes.render');
+goog.require('clojure.string');
+goog.require('clojure.string');
+goog.require('goog.events');
+goog.require('datascript');
+cljs.core.enable_console_print_BANG_.call(null);
+net.thegeez.datominoes.core.conn = datascript.create_conn.call(null,net.thegeez.datominoes.transact.schema);
+net.thegeez.datominoes.core.main = (function main(){console.log("hello world");
+datascript.transact_BANG_.call(null,net.thegeez.datominoes.core.conn,net.thegeez.datominoes.transact.init.call(null));
+net.thegeez.datominoes.render.start_game_panel.call(null,net.thegeez.datominoes.core.conn);
+return net.thegeez.datominoes.engine.start_engine.call(null,net.thegeez.datominoes.core.conn);
+});
+goog.exportSymbol('net.thegeez.datominoes.core.main', net.thegeez.datominoes.core.main);
