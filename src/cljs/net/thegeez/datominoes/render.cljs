@@ -37,7 +37,7 @@
 
 (defn stone-element [stone-id up down]
   (dom/element :div {:id stone-id
-                     :class "stone vertical back preloading"}
+                     :class "stone south back preloading"}
                (apply dom/element :div {:class "face up"}
                       (dots up))
                (apply dom/element :div {:class "face down"}
@@ -45,6 +45,38 @@
 
 (defn in-our-region [x y]
   (< 462 y))
+
+(defn match [stone place]
+  (println "stone" stone "place" place)
+  (if-not (:place/for place)
+    :south ;; first place can be used with any stone to start the game
+    (let [su (:stone/up stone)
+          sd (:stone/down stone)
+          ps (:place/for place)
+          po (:place/orientation place)
+          pso (:stone/orientation ps)
+          pu (:stone/up ps)
+          pd (:stone/down ps)]
+      (println "match " su sd po pu pd)
+      (cond
+       (and (= po :north)
+            (= pso :south)
+            (= su pu))
+       :north
+       (and (= po :north)
+            (= pso :south)
+            (= sd pu))
+       :south
+       (and (= po :south)
+            (= pso :south)
+            (= su pd))
+       :south
+       (and (= po :south)
+            (= pso :south)
+            (= sd pd))
+       :north
+       :else
+       nil))))
 
 (def z-level (atom 100))
 
@@ -91,9 +123,11 @@
                  (d/entity db id))
         place-regions (into {}
                             (for [place places]
-                              [(if (= (:place/orientation place) :vertical)
+                              [(if (#{:south :north} (:place/orientation place))
                                  [[(:place/left place) (+ (:place/left place) 24)]
-                                  [(:place/top place) (+ (:place/top place) 46)]])
+                                  [(:place/top place) (+ (:place/top place) 46)]]
+                                 [[(:place/left place) (+ (:place/left place) 46)]
+                                  [(:place/top place) (+ (:place/top place) 24)]])
                                place]))
         place-els (map :dom/el places)
         hit (fn [event]
@@ -111,25 +145,36 @@
       :drag-end (fn [stone-id event]
                   (doseq [place-el place-els]
                     (dom/remove-class place-el "dropable"))
-                  (if-let [hit (hit event)]
-                    (let [[stone-el stone-eid]
-                          (first (d/q '{:find [?el ?e]
-                                        :in [$ ?stone-id]
-                                        :where [[?e :dom/id ?stone-id]
-                                                [?e :dom/el ?el]]}
-                                      db stone-id))]
-                      (dom/remove-class stone-el "cursor_drag")
-                      (set-drag-handler stone-el (undraggable-handler db conn))
-                      (animator/slide stone-el [(:place/left hit) (:place/top hit)]
-                                      (fn []
-                                        (d/transact! conn [[:db.fn/call t/stone-placed stone-eid (:db/id hit)]]))))
-                    ((:drag-end base) stone-id event)))
+                  (let [stone
+                        (d/entity db (ffirst (d/q '{:find [?e]
+                                                    :in [$ ?stone-id]
+                                                    :where [[?e :dom/id ?stone-id]]}
+                                                  db stone-id)))
+                        hit (hit event)]
+                    (if-let [turn (and hit
+                                      (match stone hit))]
+                      (let [stone-el (:dom/el stone)]
+                        (dom/remove-class stone-el "cursor_drag")
+                        (set-drag-handler stone-el (undraggable-handler db conn))
+                        (animator/slide stone-el [(:place/left hit) (:place/top hit)]
+                                        (fn []
+                                          (d/transact! conn [[:db.fn/call t/stone-placed (:db/id stone) (:db/id hit)]]))))
+                      ((:drag-end base) stone-id event))))
       :drag (fn [stone-id event]
               (doseq [place-el place-els]
                 (dom/remove-class place-el "dropable"))
-              (let [hit (hit event)]
-                (when hit
-                  (dom/add-class (:dom/el hit) "dropable"))
+              (let [stone
+                    (d/entity db (ffirst (d/q '{:find [?e]
+                                                :in [$ ?stone-id]
+                                                :where [[?e :dom/id ?stone-id]]}
+                                              db stone-id)))
+                    hit (hit event)]
+                (if-let [turn (and hit
+                                   (match stone hit))]
+                  (do
+                    (turn-stone stone turn)
+                    (dom/add-class (:dom/el hit) "dropable"))
+                  (turn-stone stone :south))
                 (println "DRAG :)" hit "---" place-regions "--" x y ))))))
 
 (defn set-msg [msg]
@@ -185,6 +230,21 @@
                          (step actions))))))]
     (step actions)))
 
+(defn place-class [place]
+  (get {:south "vertical"
+        :north "vertical"
+        :west "horizontal"
+        :east "horizontal"} (:place/orientation place)))
+
+(defn turn-stone [stone orientation]
+  (let [el (:dom/el stone)]
+    (doto el
+      (dom/remove-class "south")
+      (dom/remove-class "west")
+      (dom/remove-class "north")
+      (dom/remove-class "east"))
+    (condp = orientation
+      (dom/add-class el (name orientation)))))
 
 (defn draw [report conn]
   (let [db (:db-after report)
@@ -202,14 +262,15 @@
            (println "Draw tree" (:table/places game))
            (doseq [stone (:player/stones (:game/player1 game))]
              (set-drag-handler (:dom/el stone) (home-drag-handler db conn)))
-           (let [root (d/entity db (ffirst (d/q '{:find [?e]
-                                                  :where [[_ :table/places ?e]
-                                                          [?e :place/used true]]}
-                                                db)))
-                 root-el (:dom/el root)]
-             (doto root-el
-               (dom/remove-class "unused")
-               (dom/set-position (:place/left root) (:place/top root)))))
+           (doseq [place (map d/touch (:table/places game))]
+             (if (:place/used place) 
+               (doto (:dom/el place)
+                 (dom/remove-class "unused")
+                 (dom/add-class (place-class place))
+                 (dom/set-position (:place/left place) (:place/top place)))
+               (doto (:dom/el place)
+                 (dom/remove-class (place-class place))
+                 (dom/add-class "unused")))))
        (do (set-msg "Opponent to move")
            (doseq [stone (:player/stones (:game/player1 game))]
              (set-drag-handler (:dom/el stone) (home-region-handler db conn))))))))
@@ -259,7 +320,9 @@
                                     ((:drag-end (. stone-el -drag-handler)) stone-id event)))
                    {:id stone-id
                     :idx idx
-                    :stone-el stone-el}))
+                    :stone-el stone-el
+                    :up up
+                    :down down}))
         places (for [i (range 20)]
                  (let [id (str "place-" i)]
                    {:id id
@@ -273,12 +336,14 @@
     (let [game-eid (:db/id (t/find-game @conn))]
       (d/transact! conn
                    (-> []
-                       (into (for [{:keys [id stone-el]} stones]
+                       (into (for [{:keys [id stone-el up down]} stones]
                                {:db/id (d/tempid :db)
                                 :dom/id id
                                 :dom/el stone-el
                                 :table/_stock game-eid
-                                :stone/orientation :south}))
+                                :stone/orientation :south
+                                :stone/up up
+                                :stone/down down}))
                        (into (for [{:keys [id place-el]} places]
                                {:db/id (d/tempid :db)
                                 :dom/id id
@@ -286,7 +351,8 @@
                                 :table/_places game-eid
                                 :place/left 380
                                 :place/top 240
-                                :place/used false})))))))
+                                :place/used false
+                                :place/orientation :south})))))))
 
 (defn start-game-panel [conn]
   (d/listen! conn (fn [report]

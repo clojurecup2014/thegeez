@@ -57,7 +57,7 @@
            {:db/id place-eid
             :place/used true
             :place/root true
-            :place/orientation :vertical}]
+            :place/orientation :south}]
           (mapcat identity
                   (for [[player-eid player-stones]
                         [[p1-eid player1-stones]
@@ -75,7 +75,7 @@
         p2-eid (:db/id (:game/player2 game))
         current-turn (:db/id (:game/turn (find-game db)))
         turn (get {nil p1-eid
-                   p1-eid p2-eid
+                   p1-eid p1-eid #_p2-eid ;; dev
                    p2-eid p1-eid} current-turn)]
     [[:db.fn/call log-event :assign-turn]
      {:db/id  game-eid
@@ -88,23 +88,52 @@
         game-eid (:db/id game)
         stone (d/entity db stone-eid)
         place (d/entity db place-eid)
-        new-place-eid (ffirst (d/q '{:find [?e]
-                                     :where [[_ :table/places ?e]
-                                             [?e :place/used false]]}
-                                   db))
-        new-place {:db/id new-place-eid
-                   :place/used true
-                   :place/top 20
-                   :place/left 20
-                   :place/orientation :vertical
-                   :place/for stone-eid}]
-    (println "Place" )
-    (into 
+        new-places (if-let [from (:place/for place)]
+                     (do 
+                       (println "PLaces has from " from)
+                       [])
+                     (if (= (:stone/up stone)
+                            (:stone/down stone))
+                       (do
+                         (println "Places for double" (d/touch stone))
+                         [])
+                       (let [place-eids (take 2
+                                              (map first
+                                                   (d/q '{:find [?e]
+                                                          :where [[_ :table/places ?e]
+                                                                  [?e :place/used false]]}
+                                                        db)))]
+                         (for [[eid [dl dt face orientation]]
+                               (map vector
+                                    place-eids
+                                    (if (#{:south :north} (:stone/orientation stone))
+                                      [#_[-46 0 :stone/up :west]
+                                       [0 -46 :stone/up :north]
+                                       #_[24 0 :stone/up :east]
+                                       #_[-46 22 :stone/down :west]
+                                       [0 46 :stone/down :south]
+                                       #_[24 22 :stone/down :east]]
+                                      ;;todo
+                                      []
+                                      ))]
+                           {:db/id eid
+                            :place/used true
+                            :place/top (+ (:place/top place) dt)
+                            :place/left (+ (:place/left place) dl)
+                            :place/orientation orientation
+                            :place/for stone-eid
+                            :place/attached face}
+                           ))))]
+    (println "Place" new-places)
+    (into
      [[:db.fn/call log-event :stone-placed stone-eid place-eid]
       [:db/add place-eid :place/used false]
       [:db/retract (:db/id (first (:player/_stones stone))) :player/stones stone-eid]]
-     [[:db/add game-eid :table/places (:db/id new-place)]
-      new-place])))
+     (mapcat (fn [new-place]
+               (println "new-place" new-place)
+               [[:db/add game-eid :table/places (:db/id new-place)]
+                new-place])
+             new-places))))
 
 
 (def schema
@@ -116,4 +145,5 @@
    :table/places {:db/valueType :db.type/ref
                   :db/cardinality :db.cardinality/many}
    :player/stones {:db/valueType :db.type/ref
-                   :db/cardinality :db.cardinality/many}})
+                   :db/cardinality :db.cardinality/many}
+   :place/for {:db/valueType :db.type/ref}})

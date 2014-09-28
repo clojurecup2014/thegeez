@@ -45,7 +45,7 @@
     position: absolute
 }
 
-.stone.horizontal {
+.stone.west, .stone.east {
     width: 42px;
     height: 20px;
 }
@@ -70,29 +70,25 @@
 .faces {
 }
 
-.vertical .face {
+.face {
     width: 20px;
     height: 20px;
 }
 
-.horizontal .face {
-    width: 20px;
-    height: 20px;
-}
-.vertical .face.up {
+.south .face.up, .north .face.up {
     border-bottom: 1px solid rgb(49, 49, 46);
 }
 
-.vertical .face.down {
+.south .face.down, .north .face.down {
     border-top: 1px solid rgb(49, 49, 46);
 }
 
-.horizontal .face.up {
+.west .face.up, .east .face.up {
     float: left;
     border-right: 1px solid rgb(49, 49, 46);
 }
 
-.horizontal .face.down {
+.west .face.down, .east .face.down {
     float: right;
     border-left: 1px solid rgb(49, 49, 46);
 }
@@ -110,151 +106,225 @@
 .back .dot {
     display: none;
 }
-.vertical .up .dot00 {
+.south .up .dot00 {
     top: 2px;
     left: 2px;
 }
-.vertical .up .dot01 {
+.south .up .dot01 {
     top: 2px;
     left: 8px;
 }
-.vertical .up .dot02 {
+.south .up .dot02 {
     top: 2px;
     left: 14px;
 }
 
-.vertical .up .dot10 {
+.south .up .dot10 {
     top: 8px;
     left: 2px;
 }
-.vertical .up .dot11 {
+.south .up .dot11 {
     top: 8px;
     left: 8px;
 }
-.vertical .up .dot12 {
+.south .up .dot12 {
     top: 8px;
     left: 14px;
 }
-.vertical .up .dot20 {
+.south .up .dot20 {
     top: 14px;
     left: 2px;
 }
-.vertical .up .dot21 {
+.south .up .dot21 {
     top: 14px;
     left: 8px;
 }
-.vertical .up .dot22 {
+.south .up .dot22 {
     top: 14px;
     left: 14px;
 }
-.vertical .down .dot00 {
+.south .down .dot00 {
     top: 24px;
     left: 2px;
 }
-.vertical .down .dot01 {
+.south .down .dot01 {
     top: 24px;
     left: 8px;
 }
-.vertical .down .dot02 {
+.south .down .dot02 {
     top: 24px;
     left: 14px;
 }
 
-.vertical .down .dot10 {
+.south .down .dot10 {
     top: 30px;
     left: 2px;
 }
-.vertical .down .dot11 {
+.south .down .dot11 {
     top: 30px;
     left: 8px;
 }
-.vertical .down .dot12 {
+.south .down .dot12 {
     top: 30px;
     left: 14px;
 }
-.vertical .down .dot20 {
+.south .down .dot20 {
     top: 36px;
     left: 2px;
 }
-.vertical .down .dot21 {
+.south .down .dot21 {
     top: 36px;
     left: 8px;
 }
-.vertical .down .dot22 {
+.south .down .dot22 {
     top: 36px;
     left: 14px;
 }
-.horizontal .up .dot00 {
-    top: 14px;
+.north .down .dot00 {
+    top: 2px;
     left: 2px;
 }
-.horizontal .up .dot01 {
+.north .down .dot01 {
+    top: 2px;
+    left: 8px;
+}
+.north .down .dot02 {
+    top: 2px;
+    left: 14px;
+}
+
+.north .down .dot10 {
     top: 8px;
     left: 2px;
 }
-.horizontal .up .dot02 {
+.north .down .dot11 {
+    top: 8px;
+    left: 8px;
+}
+.north .down .dot12 {
+    top: 8px;
+    left: 14px;
+}
+.north .down .dot20 {
+    top: 14px;
+    left: 2px;
+}
+.north .down .dot21 {
+    top: 14px;
+    left: 8px;
+}
+.north .down .dot22 {
+    top: 14px;
+    left: 14px;
+}
+.north .up .dot00 {
+    top: 24px;
+    left: 2px;
+}
+.north .up .dot01 {
+    top: 24px;
+    left: 8px;
+}
+.north .up .dot02 {
+    top: 24px;
+    left: 14px;
+}
+
+.north .up .dot10 {
+    top: 30px;
+    left: 2px;
+}
+.north .up .dot11 {
+    top: 30px;
+    left: 8px;
+}
+.north .up .dot12 {
+    top: 30px;
+    left: 14px;
+}
+.north .up .dot20 {
+    top: 36px;
+    left: 2px;
+}
+.north .up .dot21 {
+    top: 36px;
+    left: 8px;
+}
+.north .up .dot22 {
+    top: 36px;
+    left: 14px;
+}
+.west .up .dot00 {
+    top: 14px;
+    left: 2px;
+}
+.west .up .dot01 {
+    top: 8px;
+    left: 2px;
+}
+.west .up .dot02 {
     top: 2px;
     left: 2px;
 }
 
-.horizontal .up .dot10 {
+.west .up .dot10 {
     top: 14px;
     left: 8px;
 }
-.horizontal .up .dot11 {
+.west .up .dot11 {
     top: 8px;
     left: 8px;
 }
-.horizontal .up .dot12 {
+.west .up .dot12 {
     top: 2px;
     left: 8px;
 }
-.horizontal .up .dot20 {
+.west .up .dot20 {
     top: 14px;
     left: 14px;
 }
-.horizontal .up .dot21 {
+.west .up .dot21 {
     top: 8px;
     left: 14px;
 }
-.horizontal .up .dot22 {
+.west .up .dot22 {
     top: 2px;
     left: 14px;
 }
-.horizontal .down .dot00 {
+.west .down .dot00 {
     top: 14px;
     left: 24px;
 }
-.horizontal .down .dot01 {
+.west .down .dot01 {
     top: 8px;
     left: 24px;
 }
-.horizontal .down .dot02 {
+.west .down .dot02 {
     top: 2px;
     left: 24px;
 }
 
-.horizontal .down .dot10 {
+.west .down .dot10 {
     top: 14px;
     left: 30px;
 }
-.horizontal .down .dot11 {
+.west .down .dot11 {
     top: 8px;
     left: 30px;
 }
-.horizontal .down .dot12 {
+.west .down .dot12 {
     top: 2px;
     left: 30px;
 }
-.horizontal .down .dot20 {
+.west .down .dot20 {
     top: 14px;
     left: 36px;
 }
-.horizontal .down .dot21 {
+.west .down .dot21 {
     top: 8px;
     left: 36px;
 }
-.horizontal .down .dot22 {
+.west .down .dot22 {
     top: 2px;
     left: 36px;
 }
@@ -264,6 +334,10 @@
     height: 46px;
     background: orange;
     position: absolute;
+}
+.place.horizontal {
+    width: 46px;
+    height: 24px;
 }
 .place.unused {
     display: none;
