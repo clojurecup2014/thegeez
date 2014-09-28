@@ -4,7 +4,8 @@
             [goog.fx.Dragger :as fxdrag]
             [goog.math :as gmath]
             [net.thegeez.datominoes.dom-helpers :as dom]
-            [net.thegeez.datominoes.animator :as animator]))
+            [net.thegeez.datominoes.animator :as animator]
+            [net.thegeez.datominoes.transact :as t]))
 
 (def dot-mapping {0 [[0 0 0]
                      [0 0 0]
@@ -36,7 +37,7 @@
 
 (defn stone-element [stone-id up down]
   (dom/element :div {:id stone-id
-                     :class "stone horizontal"}
+                     :class "stone vertical back"}
                (apply dom/element :div {:class "face up"}
                       (dots up))
                (apply dom/element :div {:class "face down"}
@@ -82,6 +83,53 @@
                  (when-not (in-our-region x y)
                    (animator/slide stone-el (. stone-el -drag-origin)))))})
 
+(defn set-msg [msg]
+  (println "MSG: " msg)
+  (dom/set-text (dom/get-element "msg") msg))
+
+(defn anim-deal [db conn]
+  (let [game (t/find-game db)
+
+        our-stones (:player/stones (:game/player1 game))
+        _ (println "our-stones" our-stones)
+        our-deal (map (fn [idx {el :dom/el}]
+                        [el
+                         [(+ 120 (* idx 53)) (+ 300 (* idx 4))]
+                         (fn []
+                           (dom/remove-class el "back")
+                           (set-drag-handler el (home-region-handler conn)))])
+                      (range)
+                      our-stones)
+        their-stones (:player/stones (:game/player2 game))
+        their-deal (map (fn [idx {el :dom/el}]
+                        [el
+                         [(+ 120 (* idx 53)) (+ 30 (* idx 4))]])
+                      (range)
+                      their-stones)
+        actions (concat our-deal
+                        their-deal)
+        step (fn step [[action & actions]]
+               (when action
+                 (let [[el to f] action]
+                   (show-on-top el)
+                   (animator/slide el to
+                                   (fn []
+                                     (when f (f))
+                                     (step actions))))))]
+    (step actions)))
+
+
+(defn draw [report conn]
+  (let [db (:db-after report)
+        game (t/find-game db)]
+    (cond
+     (not (:game/stage game))
+     (set-msg "Game created.")
+     (= :deal (:game/stage game))
+     (do (set-msg "Dealing ...")
+         (anim-deal db conn)))))
+
+
 (defn draw-table [conn]
   (doto (.-body js/document)
     (dom/append (dom/build [:div {:id "table"}
@@ -99,7 +147,8 @@
                             [:span " - "]
                             [:a {:href "http://twitter.com/thegeez"} " @thegeez"]])))
   (let [container-wrap (let [r (dom/get-bounds (dom/get-element "table"))]
-                           (goog.math.Rect. (. r -left) (. r -top) (- (. r -width) 0) (- (. r -height) 0)))
+                         (goog.math.Rect. (+ (. r -left) 4) (+ (. r -top) 4)
+                                          (- (. r -width) 3 51) (- (. r -height) 3 51)))
         stones (for [down (range 7)
                      up (range down 7)]
                  (let [idx (+ down (* up 7))
@@ -129,17 +178,18 @@
                     :idx idx
                     :stone-el stone-el}))]
     (doseq [{:keys [stone-el idx]} stones]
-        (set! (.-anim-idx stone-el) idx)
-        (dom/append (dom/get-element "stock") stone-el))
-    (d/transact! conn (for [{:keys [id idx stone-el]} stones]
-                        {:db/id (d/tempid :db)
-                         :dom/id id
-                         :dom/el stones-el
-                         :stone/up up
-                         :stone/down down
-                         :stone/orientation :south}))))
+      (set! (.-anim-idx stone-el) idx)
+      (dom/append (dom/get-element "stock") stone-el))
+    (let [game-eid (:db/id (t/find-game @conn))]
+      (println "game-eid" game-eid)
+      (d/transact! conn (for [{:keys [id idx stone-el]} stones]
+                          {:db/id (d/tempid :db)
+                           :dom/id id
+                           :dom/el stone-el
+                           :table/_stock game-eid
+                           :stone/orientation :south})))))
 
 (defn start-game-panel [conn]
-  #_(d/listen! conn (fn [report]
-                    (draw-game report conn)))
+  (d/listen! conn (fn [report]
+                    (draw report conn)))
   (draw-table conn))

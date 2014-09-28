@@ -1,8 +1,5 @@
 goog.addDependency("base.js", ['goog'], []);
 goog.addDependency("../cljs/core.js", ['cljs.core'], ['goog.string', 'goog.object', 'goog.string.StringBuffer', 'goog.array']);
-goog.addDependency("../clojure/string.js", ['clojure.string'], ['goog.string', 'cljs.core', 'goog.string.StringBuffer']);
-goog.addDependency("../net/thegeez/datominoes/dom_helpers.js", ['net.thegeez.datominoes.dom_helpers'], ['goog.dom.forms', 'goog.dom', 'goog.dom.classes', 'goog.Timer', 'cljs.core', 'goog.fx', 'goog.fx.dom', 'goog.style', 'clojure.string']);
-goog.addDependency("../net/thegeez/datominoes/animator.js", ['net.thegeez.datominoes.animator'], ['net.thegeez.datominoes.dom_helpers', 'cljs.core']);
 goog.addDependency("../datascript/btset.js", ['datascript.btset'], ['cljs.core']);
 goog.addDependency("../datascript/core.js", ['datascript.core'], ['cljs.core', 'datascript.btset']);
 goog.addDependency("../clojure/set.js", ['clojure.set'], ['cljs.core']);
@@ -11,7 +8,11 @@ goog.addDependency("../clojure/walk.js", ['clojure.walk'], ['cljs.core']);
 goog.addDependency("../datascript/impl/entity.js", ['datascript.impl.entity'], ['cljs.core', 'datascript.core']);
 goog.addDependency("../datascript/query.js", ['datascript.query'], ['cljs.core', 'datascript.core', 'clojure.set', 'cljs.reader', 'clojure.walk', 'datascript.impl.entity']);
 goog.addDependency("../datascript.js", ['datascript'], ['datascript.query', 'cljs.core', 'datascript.core', 'datascript.btset', 'datascript.impl.entity']);
-goog.addDependency("../net/thegeez/datominoes/render.js", ['net.thegeez.datominoes.render'], ['net.thegeez.datominoes.dom_helpers', 'net.thegeez.datominoes.animator', 'cljs.core', 'datascript', 'goog.fx.Dragger', 'goog.math', 'goog.events']);
+goog.addDependency("../net/thegeez/datominoes/transact.js", ['net.thegeez.datominoes.transact'], ['cljs.core', 'datascript']);
+goog.addDependency("../clojure/string.js", ['clojure.string'], ['goog.string', 'cljs.core', 'goog.string.StringBuffer']);
+goog.addDependency("../net/thegeez/datominoes/dom_helpers.js", ['net.thegeez.datominoes.dom_helpers'], ['goog.dom.forms', 'goog.dom', 'goog.dom.classes', 'goog.Timer', 'cljs.core', 'goog.fx', 'goog.fx.dom', 'goog.style', 'clojure.string']);
+goog.addDependency("../net/thegeez/datominoes/animator.js", ['net.thegeez.datominoes.animator'], ['net.thegeez.datominoes.dom_helpers', 'cljs.core']);
+goog.addDependency("../net/thegeez/datominoes/render.js", ['net.thegeez.datominoes.render'], ['net.thegeez.datominoes.dom_helpers', 'net.thegeez.datominoes.transact', 'net.thegeez.datominoes.animator', 'cljs.core', 'datascript', 'goog.fx.Dragger', 'goog.math', 'goog.events']);
 goog.addDependency("../cljs/core/async/impl/protocols.js", ['cljs.core.async.impl.protocols'], ['cljs.core']);
 goog.addDependency("../cljs/core/async/impl/buffers.js", ['cljs.core.async.impl.buffers'], ['cljs.core', 'cljs.core.async.impl.protocols']);
 goog.addDependency("../cljs/core/async/impl/dispatch.js", ['cljs.core.async.impl.dispatch'], ['cljs.core', 'cljs.core.async.impl.buffers', 'goog.async.nextTick']);
@@ -19,4 +20,5 @@ goog.addDependency("../cljs/core/async/impl/channels.js", ['cljs.core.async.impl
 goog.addDependency("../cljs/core/async/impl/ioc_helpers.js", ['cljs.core.async.impl.ioc_helpers'], ['cljs.core', 'cljs.core.async.impl.protocols']);
 goog.addDependency("../cljs/core/async/impl/timers.js", ['cljs.core.async.impl.timers'], ['cljs.core.async.impl.channels', 'cljs.core.async.impl.dispatch', 'cljs.core', 'cljs.core.async.impl.protocols']);
 goog.addDependency("../cljs/core/async.js", ['cljs.core.async'], ['cljs.core.async.impl.channels', 'cljs.core.async.impl.dispatch', 'cljs.core', 'cljs.core.async.impl.buffers', 'cljs.core.async.impl.protocols', 'cljs.core.async.impl.ioc_helpers', 'cljs.core.async.impl.timers']);
-goog.addDependency("../net/thegeez/datominoes/core.js", ['net.thegeez.datominoes.core'], ['cljs.core', 'net.thegeez.datominoes.render', 'datascript', 'cljs.core.async', 'clojure.string', 'goog.events']);
+goog.addDependency("../net/thegeez/datominoes/engine.js", ['net.thegeez.datominoes.engine'], ['net.thegeez.datominoes.transact', 'cljs.core', 'datascript']);
+goog.addDependency("../net/thegeez/datominoes/core.js", ['net.thegeez.datominoes.core'], ['net.thegeez.datominoes.transact', 'cljs.core', 'net.thegeez.datominoes.render', 'datascript', 'cljs.core.async', 'net.thegeez.datominoes.engine', 'clojure.string', 'goog.events']);

@@ -3,7 +3,8 @@
 Clojure Cup 2014 entry
 
 # Judges Notes
-- "Hello World" project.clj/lib/compilation strip-mined from https://github.com/tonsky/datascript-chat
+- "Hello World" project.clj/lib/compilation strip-mined from https://github.com/tonsky/datascript-chat (react part later abandoned again)
+- Game structure, drag handling and animation copied from https://github.com/thegeez/gin
 
 ## About
 
