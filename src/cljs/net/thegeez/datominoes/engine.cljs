@@ -13,6 +13,10 @@
   [event args report conn]
   (d/transact! conn [[:db.fn/call t/assign-turn]]))
 
+(defmethod handle :stone-placed
+  [event args report conn]
+  (d/transact! conn [[:db.fn/call t/assign-turn]]))
+
 (defmethod handle :default
   [event args report conn]
   (println "handle: " (pr-str [event args #_report #_conn])))

@@ -53,8 +53,7 @@
         place-eid (:db/id (first (:table/places game)))]
     (into [[:db.fn/call log-event :deal]
            {:db/id game-eid
-            :game/stage :deal
-            :table/tree place-eid}
+            :game/stage :deal}
            {:db/id place-eid
             :place/used true
             :place/root true
@@ -83,6 +82,30 @@
       :game/turn turn
       :game/stage :playing}]))
 
+(defn stone-placed [db stone-eid place-eid]
+  (println "Placed" stone-eid place-eid )
+  (let [game (find-game db)
+        game-eid (:db/id game)
+        stone (d/entity db stone-eid)
+        place (d/entity db place-eid)
+        new-place-eid (ffirst (d/q '{:find [?e]
+                                     :where [[_ :table/places ?e]
+                                             [?e :place/used false]]}
+                                   db))
+        new-place {:db/id new-place-eid
+                   :place/used true
+                   :place/top 20
+                   :place/left 20
+                   :place/orientation :vertical
+                   :place/for stone-eid}]
+    (println "Place" )
+    (into 
+     [[:db.fn/call log-event :stone-placed stone-eid place-eid]
+      [:db/add place-eid :place/used false]
+      [:db/retract (:db/id (first (:player/_stones stone))) :player/stones stone-eid]]
+     [[:db/add game-eid :table/places (:db/id new-place)]
+      new-place])))
+
 
 (def schema
   {:game/player1 {:db/valueType :db.type/ref}
@@ -90,7 +113,6 @@
    :game/turn {:db/valueType :db.type/ref}
    :table/stock {:db/valueType :db.type/ref
                  :db/cardinality :db.cardinality/many}
-   :table/tree {:db/valueType :db.type/ref}
    :table/places {:db/valueType :db.type/ref
                   :db/cardinality :db.cardinality/many}
    :player/stones {:db/valueType :db.type/ref

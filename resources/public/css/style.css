@@ -269,8 +269,8 @@
     display: none;
 }
 .place.dropable {
-    border: 6px solid orange;
-    background-color: orange;
+    border: 6px solid rgb(149, 250, 70);
+    background-color: rgb(149, 250, 70);
     margin-top: -6px;
     margin-left: -6px;
 }

@@ -111,8 +111,18 @@
       :drag-end (fn [stone-id event]
                   (doseq [place-el place-els]
                     (dom/remove-class place-el "dropable"))
-                  (if-let [hit (hit event)] 
-                    (println "Place stone on hit :)")
+                  (if-let [hit (hit event)]
+                    (let [[stone-el stone-eid]
+                          (first (d/q '{:find [?el ?e]
+                                        :in [$ ?stone-id]
+                                        :where [[?e :dom/id ?stone-id]
+                                                [?e :dom/el ?el]]}
+                                      db stone-id))]
+                      (dom/remove-class stone-el "cursor_drag")
+                      (set-drag-handler stone-el (undraggable-handler db conn))
+                      (animator/slide stone-el [(:place/left hit) (:place/top hit)]
+                                      (fn []
+                                        (d/transact! conn [[:db.fn/call t/stone-placed stone-eid (:db/id hit)]]))))
                     ((:drag-end base) stone-id event)))
       :drag (fn [stone-id event]
               (doseq [place-el place-els]
@@ -189,15 +199,20 @@
      (= :playing (:game/stage game))
      (if (= (:game/turn game) (:game/player1 game)) 
        (do (set-msg "It's your turn, attach a stone on the table or pick from the stock if possible")
-           (println "Draw tree" (d/touch (:table/tree game)))
+           (println "Draw tree" (:table/places game))
            (doseq [stone (:player/stones (:game/player1 game))]
              (set-drag-handler (:dom/el stone) (home-drag-handler db conn)))
-           (let [root (:table/tree game)
+           (let [root (d/entity db (ffirst (d/q '{:find [?e]
+                                                  :where [[_ :table/places ?e]
+                                                          [?e :place/used true]]}
+                                                db)))
                  root-el (:dom/el root)]
              (doto root-el
                (dom/remove-class "unused")
                (dom/set-position (:place/left root) (:place/top root)))))
-       (do (set-msg "Opponent to move"))))))
+       (do (set-msg "Opponent to move")
+           (doseq [stone (:player/stones (:game/player1 game))]
+             (set-drag-handler (:dom/el stone) (home-region-handler db conn))))))))
 
 
 (defn draw-table [conn]
